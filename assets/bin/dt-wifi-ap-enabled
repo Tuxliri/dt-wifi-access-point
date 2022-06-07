@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+
+import time
+
+from dt_device_utils import get_device_hardware_brand, DeviceHardwareBrand
+ROBOT_HARDWARE = get_device_hardware_brand()
+
+if ROBOT_HARDWARE == DeviceHardwareBrand.JETSON_NANO:
+    import Jetson.GPIO as GPIO
+    GPIO_OUT = -1
+    GPIO_IN = -1
+
+elif ROBOT_HARDWARE in [DeviceHardwareBrand.RASPBERRY_PI, DeviceHardwareBrand.RASPBERRY_PI_64]:
+    import RPi.GPIO as GPIO
+    GPIO_OUT = 21
+    GPIO_IN = 20
+
+else:
+    raise Exception("Undefined Hardware!")
+
+
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(GPIO_IN, GPIO.IN)
+GPIO.setup(GPIO_OUT, GPIO.OUT)
+
+# set out pin to HIGH
+GPIO.output(GPIO_OUT, 1)
+
+# wait 1 sec
+time.sleep(1)
+
+# read in pin
+signal = int(GPIO.input(GPIO_IN))
+
+# exit with 0 to signal AP is enabled
+exit(1 - signal)

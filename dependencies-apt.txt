@@ -1,1 +1,8 @@
 # LIST YOUR APT PACKAGES HERE
+
+hostapd
+iptables
+isc-dhcp-server
+iproute2
+iw
+rfkill
