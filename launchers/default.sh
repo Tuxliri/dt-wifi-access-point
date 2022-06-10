@@ -19,15 +19,15 @@ set -e
 
 # Default values
 true ${INTERFACE:=wlan0}
+true ${GATEWAY:=eth0}
 true ${SUBNET:=192.168.254.0}
 true ${AP_ADDR:=192.168.254.1}
-true ${SSID:=$(dt-wifi-ssid)}
+true ${SSID:=$(INTERFACE=${INTERFACE} dt-wifi-ssid)}
 true ${CHANNEL:=11}
 true ${WPA_PASSPHRASE:=quackquack}
 true ${HW_MODE:=g}
 true ${DRIVER:=nl80211}
 true ${HT_CAPAB:=[HT40-][SHORT-GI-20]}
-true ${MODE:=host}
 
 set +e
 
@@ -77,33 +77,17 @@ done
 cat /proc/sys/net/ipv4/ip_dynaddr
 cat /proc/sys/net/ipv4/ip_forward
 
-if [ "${OUTGOINGS}" ] ; then
-   ints="$(sed 's/,\+/ /g' <<<"${OUTGOINGS}")"
-   for int in ${ints}
-   do
-      echo "Setting iptables for outgoing traffics on ${int}..."
-      iptables -t nat -D POSTROUTING -s ${SUBNET}/24 -o ${int} -j MASQUERADE > /dev/null 2>&1 || true
-      iptables -t nat -A POSTROUTING -s ${SUBNET}/24 -o ${int} -j MASQUERADE
+echo "Setting iptables for outgoing traffics on ${GATEWAY}..."
+iptables -t nat -D POSTROUTING -s ${SUBNET}/24 -o ${GATEWAY} -j MASQUERADE > /dev/null 2>&1 || true
+iptables -t nat -A POSTROUTING -s ${SUBNET}/24 -o ${GATEWAY} -j MASQUERADE
 
-      iptables -D FORWARD -i ${int} -o ${INTERFACE} -m state --state RELATED,ESTABLISHED -j ACCEPT > /dev/null 2>&1 || true
-      iptables -A FORWARD -i ${int} -o ${INTERFACE} -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -D FORWARD -i ${GATEWAY} -o ${INTERFACE} -m state --state RELATED,ESTABLISHED -j ACCEPT > /dev/null 2>&1 || true
+iptables -A FORWARD -i ${GATEWAY} -o ${INTERFACE} -m state --state RELATED,ESTABLISHED -j ACCEPT
 
-      iptables -D FORWARD -i ${INTERFACE} -o ${int} -j ACCEPT > /dev/null 2>&1 || true
-      iptables -A FORWARD -i ${INTERFACE} -o ${int} -j ACCEPT
-   done
-else
-   echo "Setting iptables for outgoing traffics on all interfaces..."
-   iptables -t nat -D POSTROUTING -s ${SUBNET}/24 -j MASQUERADE > /dev/null 2>&1 || true
-   iptables -t nat -A POSTROUTING -s ${SUBNET}/24 -j MASQUERADE
+iptables -D FORWARD -i ${INTERFACE} -o ${GATEWAY} -j ACCEPT > /dev/null 2>&1 || true
+iptables -A FORWARD -i ${INTERFACE} -o ${GATEWAY} -j ACCEPT
 
-   iptables -D FORWARD -o ${INTERFACE} -m state --state RELATED,ESTABLISHED -j ACCEPT > /dev/null 2>&1 || true
-   iptables -A FORWARD -o ${INTERFACE} -m state --state RELATED,ESTABLISHED -j ACCEPT
-
-   iptables -D FORWARD -i ${INTERFACE} -j ACCEPT > /dev/null 2>&1 || true
-   iptables -A FORWARD -i ${INTERFACE} -j ACCEPT
-fi
 echo "Configuring DHCP server..."
-
 cat > "/etc/dhcp/dhcpd.conf" <<EOF
 option domain-name-servers 8.8.8.8, 8.8.4.4;
 option subnet-mask 255.255.255.0;
@@ -125,3 +109,9 @@ dt-exec hostapd /etc/hostapd.conf
 
 # wait for app to end
 dt-launchfile-join
+
+
+echo "Removing iptables for outgoing traffics on ${GATEWAY}..."
+iptables -t nat -D POSTROUTING -s ${SUBNET}/24 -o ${GATEWAY} -j MASQUERADE > /dev/null 2>&1 || true
+iptables -D FORWARD -i ${GATEWAY} -o ${INTERFACE} -m state --state RELATED,ESTABLISHED -j ACCEPT > /dev/null 2>&1 || true
+iptables -D FORWARD -i ${INTERFACE} -o ${GATEWAY} -j ACCEPT > /dev/null 2>&1 || true
