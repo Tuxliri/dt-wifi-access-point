@@ -100,6 +100,8 @@ EOF
 echo "Starting DHCP server..."
 dt-exec dhcpd ${INTERFACE}
 
+
+# TODO: we have to catch the exit code of `hostapd` and return it to docker so that `restart: on-failure` can do its thing
 echo "Starting HostAP daemon..."
 dt-exec hostapd /etc/hostapd.conf
 
