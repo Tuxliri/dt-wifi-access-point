@@ -83,6 +83,9 @@ LABEL org.duckietown.label.module.type="${REPO_NAME}" \
 # <== Do not change the code above this line
 # <==================================================
 
+# force reinstall RPi.GPIO to remove nVidia's dummy RPi libraries
+RUN python3 -m pip install --ignore-installed --force-reinstall RPi.GPIO
+
 # clear DHCP leases
 RUN echo "" > /var/lib/dhcp/dhcpd.leases
 

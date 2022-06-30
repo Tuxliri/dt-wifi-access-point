@@ -1,1 +1,7 @@
 # LIST YOUR PYTHON3 PACKAGES HERE
+
+# Jetson's GPIO library
+Jetson.GPIO
+
+# RaspberryPi's GPIO library
+RPi.GPIO
