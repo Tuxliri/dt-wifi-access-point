@@ -8,16 +8,28 @@ dt-launchfile-init
 # YOUR CODE BELOW THIS LINE
 # ----------------------------------------------------------------------------
 
+# check if we are running in AP mode (jumper off)
+dt-wifi-ap-enabled
+if [ "$?" -eq "0" ] ; then
+    echo "[INFO] Jumper not detected, wifi AP is disabled, using client mode instead."
+    exit 0
+fi
+echo "[INFO] Jumper detected, wifi AP is enabled."
 
-# Check if running in privileged mode
+# disable client mode
+echo "[INFO] Disabling wifi client..."
+dt-set-trigger wifi-client off
+sleep 5
+echo "[INFO] Wifi client disabled."
+
+# check if running in privileged mode
 if [ ! -w "/sys" ] ; then
     echo "[Error] Not running in privileged mode."
     exit 1
 fi
 
+# default values
 set -e
-
-# Default values
 true ${INTERFACE:=wlan0}
 true ${GATEWAY:=eth0}
 true ${SUBNET:=192.168.254.0}
@@ -29,8 +41,7 @@ true ${HW_MODE:=g}
 true ${DRIVER:=nl80211}
 true ${HT_CAPAB:=[HT40-][SHORT-GI-20]}
 
-set +e
-
+# configure hostapd
 if [ ! -f "/etc/hostapd.conf" ] ; then
     cat > "/etc/hostapd.conf" <<EOF
 interface=${INTERFACE}
@@ -50,33 +61,28 @@ ieee80211n=1
 ht_capab=${HT_CAPAB}
 wmm_enabled=1
 EOF
-
 fi
 
 # unblock wlan
 rfkill unblock wlan
 
+# setup interface and restart DHCP service
 echo "Setting interface ${INTERFACE}"
-
-# Setup interface and restart DHCP service
 ip link set ${INTERFACE} up
 ip addr flush dev ${INTERFACE}
 ip addr add ${AP_ADDR}/24 dev ${INTERFACE}
 
-# NAT settings
-echo "NAT settings ip_dynaddr, ip_forward"
-
+# configure NAT: IP forwarding
+echo "Configuring NAT: ip_dynaddr / ip_forward"
 for i in ip_dynaddr ip_forward ; do
   if [ $(cat /proc/sys/net/ipv4/$i) ]; then
-    echo $i already 1
+    echo "${i} already set to 1"
   else
     echo "1" > /proc/sys/net/ipv4/$i
   fi
 done
 
-cat /proc/sys/net/ipv4/ip_dynaddr
-cat /proc/sys/net/ipv4/ip_forward
-
+# configure routes
 echo "Setting iptables for outgoing traffics on ${GATEWAY}..."
 iptables -t nat -D POSTROUTING -s ${SUBNET}/24 -o ${GATEWAY} -j MASQUERADE > /dev/null 2>&1 || true
 iptables -t nat -A POSTROUTING -s ${SUBNET}/24 -o ${GATEWAY} -j MASQUERADE
@@ -87,6 +93,7 @@ iptables -A FORWARD -i ${GATEWAY} -o ${INTERFACE} -m state --state RELATED,ESTAB
 iptables -D FORWARD -i ${INTERFACE} -o ${GATEWAY} -j ACCEPT > /dev/null 2>&1 || true
 iptables -A FORWARD -i ${INTERFACE} -o ${GATEWAY} -j ACCEPT
 
+# configure DHCP server
 echo "Configuring DHCP server..."
 cat > "/etc/dhcp/dhcpd.conf" <<EOF
 option domain-name-servers 8.8.8.8, 8.8.4.4;
@@ -96,14 +103,15 @@ subnet ${SUBNET} netmask 255.255.255.0 {
 }
 EOF
 
+# run DHCP server
 echo "Starting DHCP server..."
 dt-exec dhcpd ${INTERFACE}
-
 
 # TODO: we have to catch the exit code of `hostapd` and return it to docker so that `restart: on-failure` can do its thing
 echo "Starting HostAP daemon..."
 dt-exec hostapd /etc/hostapd.conf
 
+set +e
 
 # ----------------------------------------------------------------------------
 # YOUR CODE ABOVE THIS LINE
@@ -111,7 +119,7 @@ dt-exec hostapd /etc/hostapd.conf
 # wait for app to end
 dt-launchfile-join
 
-
+# clear previously added routes
 echo "Removing iptables for outgoing traffics on ${GATEWAY}..."
 iptables -t nat -D POSTROUTING -s ${SUBNET}/24 -o ${GATEWAY} -j MASQUERADE > /dev/null 2>&1 || true
 iptables -D FORWARD -i ${GATEWAY} -o ${INTERFACE} -m state --state RELATED,ESTABLISHED -j ACCEPT > /dev/null 2>&1 || true

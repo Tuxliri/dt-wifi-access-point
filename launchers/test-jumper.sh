@@ -10,7 +10,7 @@ dt-launchfile-init
 
 
 dt-wifi-ap-enabled
-echo "Jumper detected: $((1-$?))"
+echo "Jumper detected: $?"
 
 
 # ----------------------------------------------------------------------------
