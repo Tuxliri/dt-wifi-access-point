@@ -23,7 +23,7 @@ if dt-wifi-jumper-missing; then
     echo "[INFO] Wifi client enabled."
 
     # remove fixed IP from device
-    ip addr del ${AP_ADDR}/24 dev ${INTERFACE}
+    ip addr del ${AP_ADDR}/24 dev ${INTERFACE} | :
 
     exit 0
 else
