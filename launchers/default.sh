@@ -11,6 +11,13 @@ dt-launchfile-init
 # check if we are running in client mode (jumper off)
 if dt-wifi-jumper-missing; then
     echo "[INFO] Jumper NOT detected, wifi AP is disabled, using client mode instead."
+
+    # enable client mode
+    echo "[INFO] Anabling wifi client..."
+    dt-set-trigger wifi-client on
+    sleep 5
+    echo "[INFO] Wifi client enabled."
+
     exit 0
 else
     echo "[INFO] Jumper detected, wifi AP is enabled."
