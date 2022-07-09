@@ -8,6 +8,10 @@ dt-launchfile-init
 # YOUR CODE BELOW THIS LINE
 # ----------------------------------------------------------------------------
 
+# default values
+true ${INTERFACE:=wlan0}
+true ${AP_ADDR:=192.168.254.1}
+
 # check if we are running in client mode (jumper off)
 if dt-wifi-jumper-missing; then
     echo "[INFO] Jumper NOT detected, wifi AP is disabled, using client mode instead."
@@ -17,6 +21,9 @@ if dt-wifi-jumper-missing; then
     dt-set-trigger wifi-client on
     sleep 5
     echo "[INFO] Wifi client enabled."
+
+    # remove fixed IP from device
+    ip addr del ${AP_ADDR}/24 dev ${INTERFACE}
 
     exit 0
 else
@@ -36,10 +43,8 @@ else
 
     # default values
     set -e
-    true ${INTERFACE:=wlan0}
     true ${GATEWAY:=eth0}
     true ${SUBNET:=192.168.254.0}
-    true ${AP_ADDR:=192.168.254.1}
     true ${SSID:=$(INTERFACE=${INTERFACE} dt-wifi-ssid)}
     true ${CHANNEL:=11}
     true ${WPA_PASSPHRASE:=quackquack}
