@@ -9,8 +9,11 @@ dt-launchfile-init
 # ----------------------------------------------------------------------------
 
 
-dt-wifi-ap-enabled
-echo "Jumper detected: $?"
+if dt-wifi-jumper-missing; then
+    echo "Jumper NOT detected";
+else
+    echo "Jumper detected";
+fi
 
 
 # ----------------------------------------------------------------------------

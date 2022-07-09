@@ -33,5 +33,5 @@ time.sleep(0.1)
 # read in pin
 present = int(GPIO.input(GPIO_IN))
 
-# exit with 0 to signal AP is enabled (aka, jumper is missing)
+# exit with 0 to signal jumper is missing
 exit(present)
