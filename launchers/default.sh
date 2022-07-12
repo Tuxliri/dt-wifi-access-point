@@ -12,18 +12,22 @@ dt-launchfile-init
 true ${INTERFACE:=wlan0}
 true ${AP_ADDR:=192.168.254.1}
 
+# try reading the GPIO jumper
+timeout 10s dt-wifi-jumper-missing
+exit_code=$?
+
 # check if we are running in client mode (jumper off)
-if dt-wifi-jumper-missing; then
+if [ "$exit_code" = "0" ] || [ "$exit_code" = "124" ] ; then
     echo "[INFO] Jumper NOT detected, wifi AP is disabled, using client mode instead."
 
     # enable client mode
-    echo "[INFO] Anabling wifi client..."
+    echo "[INFO] Enabling wifi client..."
     dt-set-trigger wifi-client on
     sleep 5
     echo "[INFO] Wifi client enabled."
 
-    # remove fixed IP from device
-    ip addr del ${AP_ADDR}/24 dev ${INTERFACE} | :
+    # remove IPs from device
+    ip addr flush dev ${INTERFACE}
 
     exit 0
 else
@@ -129,6 +133,14 @@ EOF
 
     # wait for app to end
     dt-launchfile-join
+
+    # remove IPs from device
+    ip addr flush dev ${INTERFACE}
+
+    # re-enable client mode
+    echo "[INFO] Re-enabling wifi client..."
+    dt-set-trigger wifi-client on
+    echo "[INFO] Wifi client enabled."
 
     # clear previously added routes
     echo "Removing iptables for outgoing traffics on ${GATEWAY}..."

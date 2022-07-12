@@ -18,8 +18,6 @@ elif ROBOT_HARDWARE in [DeviceHardwareBrand.RASPBERRY_PI, DeviceHardwareBrand.RA
 else:
     raise Exception("Undefined Hardware!")
 
-GPIO.setwarnings(False)
-
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(GPIO_IN, GPIO.IN)
 GPIO.setup(GPIO_OUT, GPIO.OUT)
