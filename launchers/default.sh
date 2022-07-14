@@ -20,14 +20,14 @@ exit_code=$?
 if [ "$exit_code" = "0" ] || [ "$exit_code" = "124" ] ; then
     echo "[INFO] Jumper NOT detected, wifi AP is disabled, using client mode instead."
 
-    # enable client mode
-    echo "[INFO] Enabling wifi client..."
-    dt-set-trigger wifi-client on
-    sleep 5
-    echo "[INFO] Wifi client enabled."
-
     # remove IPs from device
     ip addr flush dev ${INTERFACE}
+
+    # enable client mode
+    echo "[INFO] Enabling wifi client..."
+    dt-set-trigger wifi-client restart
+    sleep 5
+    echo "[INFO] Wifi client enabled."
 
     exit 0
 else
