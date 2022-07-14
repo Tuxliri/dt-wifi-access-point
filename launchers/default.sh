@@ -29,7 +29,7 @@ if [ "$exit_code" = "0" ] || [ "$exit_code" = "124" ] ; then
     sleep 5
     echo "[INFO] Wifi client enabled."
 
-    exit 0
+    exec sleep infinity
 else
     echo "[INFO] Jumper detected, wifi AP is enabled."
 
