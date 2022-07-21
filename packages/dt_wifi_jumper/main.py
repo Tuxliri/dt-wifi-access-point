@@ -7,7 +7,7 @@ import time
 from dt_device_utils import get_device_hardware_brand, DeviceHardwareBrand
 ROBOT_HARDWARE = get_device_hardware_brand()
 
-if ROBOT_HARDWARE == DeviceHardwareBrand.JETSON_NANO:
+if ROBOT_HARDWARE is DeviceHardwareBrand.JETSON_NANO:
     import Jetson.GPIO as GPIO
     GPIO_OUT = -1
     GPIO_IN = -1
@@ -16,6 +16,9 @@ elif ROBOT_HARDWARE in [DeviceHardwareBrand.RASPBERRY_PI, DeviceHardwareBrand.RA
     import RPi.GPIO as GPIO
     GPIO_OUT = 5
     GPIO_IN = 6
+
+elif ROBOT_HARDWARE is DeviceHardwareBrand.VIRTUAL:
+    exit(99)
 
 else:
     raise Exception("Undefined Hardware!")

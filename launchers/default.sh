@@ -16,6 +16,11 @@ true ${AP_ADDR:=192.168.254.1}
 timeout 10s dt-wifi-jumper-missing
 exit_code=$?
 
+# do nothing on virtual devices
+if [ "$exit_code" = "99" ] ; then
+    exec sleep infinity
+fi
+
 # check if we are running in client mode (jumper off)
 if [ "$exit_code" = "0" ] || [ "$exit_code" = "124" ] ; then
     echo "[INFO] Jumper NOT detected, wifi AP is disabled, using client mode instead."
