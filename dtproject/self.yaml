@@ -1,0 +1,8 @@
+name: "dt-wifi-access-point"
+maintainer:
+    name: "Andrea F. Daniele"
+    email: "afdaniele@duckietown.com"
+description: "Containerized WiFi AP for Duckietown robots"
+version: 0.0.2
+# pick an icon from: https://fontawesome.com/v4.7.0/icons/
+icon: wifi
